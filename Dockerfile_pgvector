@@ -1,0 +1,12 @@
+
+FROM ankane/pgvector
+
+# Define ambiente básico
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=pgvector123
+ENV POSTGRES_DB=pgvector
+
+# Expondo a porta padrão
+EXPOSE 5432
+
+VOLUME ["/var/lib/postgresql/data"]

@@ -1,2 +1,4 @@
+variable "image_name" {
+  type = string
+}
 
-# Arquivo reservado para variáveis futuras

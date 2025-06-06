@@ -1,26 +1,70 @@
-name: Deploy com Terraform no K3s
+name: Build and Deploy pgvector
 
 on:
   push:
     branches:
       - main
 
+env:
+  APP_NAME: "pgvector"
+
 jobs:
-  deploy:
+  docker-build:
     runs-on: self-hosted
+    outputs:
+      image_tag: ${{ steps.image-tag.outputs.tag }}
+      image_name: ${{ steps.save-image-name.outputs.name }}
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Definir versão da imagem
+        id: image-tag
+        run: |
+          TAG=main-${{ github.run_number }}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Login no GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build da imagem Docker
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}/pgvector:${{ steps.image-tag.outputs.tag }} .
+
+      - name: Push da imagem
+        run: |
+          docker push ghcr.io/${{ github.repository }}/pgvector:${{ steps.image-tag.outputs.tag }}
+
+      - name: Salvar nome da imagem
+        id: save-image-name
+        run: |
+          echo "name=ghcr.io/${{ github.repository }}/pgvector:${{ steps.image-tag.outputs.tag }}" >> $GITHUB_OUTPUT
+
+    terraform-deploy:
+    needs: docker-build
+    runs-on: self-hosted
+
+    container:
+      image: hashicorp/terraform:1.6
+      options: --entrypoint=""
+
     defaults:
       run:
         working-directory: terraform
 
     steps:
-      - name: Checkout do repositório
+      - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Inicializar o Terraform
+      - name: Configurar kubeconfig do K3s
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_DATA }}" > ~/.kube/config
+
+      - name: Inicializar Terraform
         run: terraform init
 
-      - name: Validar configuração
-        run: terraform validate
-
-      - name: Aplicar infraestrutura automaticamente
+      - name: Aplicar infraestrutura com imagem do pgvector
+        env:
+          TF_VAR_image_name: ${{ needs.docker-build.outputs.image_name }}
         run: terraform apply -auto-approve
