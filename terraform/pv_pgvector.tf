@@ -1,4 +1,3 @@
-
 resource "kubernetes_persistent_volume" "pgvector_pv" {
   metadata {
     name = "local-pv"
@@ -13,8 +12,10 @@ resource "kubernetes_persistent_volume" "pgvector_pv" {
     persistent_volume_reclaim_policy = "Retain"
     storage_class_name               = "manual"
 
-    local {
-      path = "/mnt/data"
+    persistent_volume_source {
+      local {
+        path = "/mnt/data"
+      }
     }
 
     node_affinity {
@@ -23,7 +24,7 @@ resource "kubernetes_persistent_volume" "pgvector_pv" {
           match_expressions {
             key      = "kubernetes.io/hostname"
             operator = "In"
-            values   = ["kube-ghp"]
+            values   = ["modelo-ubuntu-2404"]
           }
         }
       }

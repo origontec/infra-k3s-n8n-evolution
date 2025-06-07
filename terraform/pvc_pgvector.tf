@@ -2,7 +2,7 @@
 resource "kubernetes_persistent_volume_claim" "pgvector_pvc" {
   metadata {
     name      = "local-pvc"
-    namespace = kubernetes_namespace.sistema_automation.metadata[0].name
+    namespace = kubernetes_namespace.infra_n8n.metadata[0].name
   }
 
   spec {

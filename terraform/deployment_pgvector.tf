@@ -1,4 +1,3 @@
-
 resource "kubernetes_deployment" "pgvector" {
   metadata {
     name      = "pgvector"
@@ -22,23 +21,26 @@ resource "kubernetes_deployment" "pgvector" {
       }
 
       spec {
-        containers {
+        container {
           name  = "pgvector"
-          image = "ankane/pgvector"
-          ports {
+          image = var.image_name
+
+          port {
             container_port = 5432
           }
+
           env {
             name  = "POSTGRES_PASSWORD"
             value = "pgvector123"
           }
-          volume_mounts {
+
+          volume_mount {
             mount_path = "/var/lib/postgresql/data"
             name       = "pgdata"
           }
         }
 
-        volumes {
+        volume {
           name = "pgdata"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.pgvector_pvc.metadata[0].name
@@ -52,7 +54,7 @@ resource "kubernetes_deployment" "pgvector" {
                 match_expressions {
                   key      = "kubernetes.io/hostname"
                   operator = "In"
-                  values   = ["kube-ghp"]
+                  values   = ["modelo-ubuntu-2404"]
                 }
               }
             }
