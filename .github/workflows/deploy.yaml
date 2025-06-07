@@ -40,14 +40,12 @@ jobs:
         run: |
           echo "name=ghcr.io/${{ github.repository }}/pgvector:${{ steps.image-tag.outputs.tag }}" >> $GITHUB_OUTPUT
 
-    terraform-deploy:
+  terraform-deploy:
     needs: docker-build
     runs-on: self-hosted
-
     container:
       image: hashicorp/terraform:1.6
       options: --entrypoint=""
-
     defaults:
       run:
         working-directory: terraform
